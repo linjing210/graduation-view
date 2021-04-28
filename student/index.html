@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- import CSS -->
+  <link rel="stylesheet" type="text/css" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+  <script src="https://unpkg.com/vue/dist/vue.js"></script>
+  <style type="text/css">
+  	html, body{
+		margin: 0;
+		padding: 0;
+/* 		overflow: hidden; */
+	}
+	.iframe{background: url(admin-loading.gif) no-repeat center 50%;}
+	.iframe{width: 100%; border: 0px;}
+	
+	[v-cloak] {
+	   display: none;
+	}
+  </style>
+</head>
+<body>
+  <div id="app" >
+	  <el-row style="background-color: #409EFF;">
+		<el-col :span=6 >
+			<el-image
+				class="logo-box"
+				:src="url"
+				fit="contain"></el-image>
+		</el-col>
+		<el-col :span=12>
+			<el-menu 
+			:default-active="activeIndex" class="el-menu-demo" 
+			mode="horizontal" @select="handleSelect" 
+			background-color="#409EFF"
+			  text-color="#fff"
+			  active-text-color="#fff">
+			  <el-menu-item index="1">首页</el-menu-item>
+			  <el-menu-item index="2">我的选题</el-menu-item>
+			  <el-menu-item index="3">消息中心</el-menu-item>
+			</el-menu>
+		</el-col>  
+		<el-col :span=6>
+			<el-menu 
+			:default-active="activeIndex" class="el-menu-demo" 
+			mode="horizontal" @select="handleSelect" 
+			background-color="#409EFF"
+			  text-color="#fff"
+			  active-text-color="#fff">
+			  <el-menu-item index="1">我的选题</el-menu-item>
+			  <el-menu-item index="2"><div class="block"><el-avatar :size="50" src="/avatar/default.gif"></el-avatar></div></el-menu-item>
+			  <el-menu-item index="3">消息中心</el-menu-item>
+			</el-menu>
+		</el-col> 
+	  </el-row>	  
+	  <div id="frame" v-cloak>
+		  <template>
+		    <iframe class="iframe" height="1400px" :src="frame.frameUrl"></iframe>
+		  </template>
+	  </div>
+  </div>
+</body scroll="no">
+  <!-- import Vue before Element -->
+
+  <!-- import JavaScript -->
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script src="https://unpkg.com/jquery@3.4.1/dist/jquery.min.js"></script>
+  <script src="https://www.layuicdn.com/layer-v3.1.1/layer.js"></script>
+  <script type="text/javascript" src="../static/sa.js"></script>
+  <script>
+
+    var app = new Vue({
+      el: '#app',
+      data() {
+		return {
+		  frame: {
+			frameName: 'home',
+			frameUrl: './home.html',
+			data:{
+				
+			}
+		  },
+		  activeIndex: '1',
+		  url: 'https://in.aiit.edu.cn/img/logo.d2252c89.png',
+		  base_url: sa.cfg.api_url,
+		  fit: "contain",
+		  p:{
+			current: 1,
+			size: 15,
+			count: 0,
+			tagIds:[],
+			userIds:[]
+		  },
+		  tagList: [],
+		  teacherList: [],
+		  topicList:[]
+		};
+	  },
+	  methods:{
+		handleSelect(key, keyPath) {
+		    console.log(key, keyPath);
+		},
+	  }
+    })
+  </script>
+</html>
+

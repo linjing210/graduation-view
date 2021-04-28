@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <!-- import CSS -->
+  <link rel="stylesheet" href="./home.css" />
+  <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+	<!-- import Vue before Element -->
+	<script src="https://unpkg.com/vue/dist/vue.js"></script>
+</head>
+<body>
+  <div id="home">
+	  <template>
+	  <el-row class="box-shadow">
+		  <el-col :offset=2 :span=20 style="margin: 2rem 6.25rem; ">
+			 <div class="tag-group">
+			   <span class="tag-group__title title-font">选题标签: </span>
+			   <el-tag
+				 class="search-tag"
+			     v-for="(tag, index) in tagList"
+			     :key="tag.typeId"
+			     :effect="tag.effect" 
+				 @click='onChange(1, index)'>
+			     {{ tag.typeName }}
+			   </el-tag>
+			 </div>
+			 <div class="tag-group top-nonmal" >
+			   <span class="title-font">指导老师: </span>
+			   <el-tag
+				 class="search-tag"
+			     v-for="(teacher, index) in teacherList"
+			     :key="teacher.userId"
+			     :effect="teacher.effect"
+				 @click='onChange(2, index)'>
+			     {{ teacher.username }}
+			   </el-tag>
+			 </div>
+		  </el-col>
+	  </el-row>
+	  
+	  <el-row class="top-nonmal">
+		  <el-col :offset=1 class="title-font">
+			  全部选题
+		  </el-col>
+	  </el-row>
+	  
+	  <el-row class="top-nonmal">
+	  	<el-col :span=20 :offset=2 >
+			<p v-if="p.count == 0" style="text-align: center;">暂无数据</p>
+			<div class="topic-box box-shadow" v-for="(topic, index) in topicList">
+				<div class="topic-image"><img :src="base_url + topic.cover" style="width: 90%;"/></div>
+				<div class="margin-nonmal topic-title-box" style="width: 90%;">
+					<el-link :underline="false"><p class="topic-title" @click="getDetail(topic.topicId)">{{topic.topicName}}</p></el-link>
+				</div>
+				<div>
+					<i class="el-icon-collection-tag margin-nonmal"></i>
+					<el-tag
+					  class="margin-nonmal"
+					  v-for="tag in topic.tagList"
+					  :key="tag.typeId">
+					  {{tag.typeName}}
+					</el-tag>
+				</div>
+			</div>
+		</el-col>
+	  </el-row>
+	  <el-row style="text-align: center; margin-bottom: 40px;">
+		  <div class="block">
+		    <el-pagination
+		      @current-change="getTopicList"
+		      :current-page.sync="p.current"
+		      :page-size="15"
+		      layout="total, prev, pager, next"
+		      :total="p.count">
+		    </el-pagination>
+		  </div>
+	  </el-row>
+	  </template>
+  </div>
+</body>
+  <!-- import JavaScript -->
+  <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+  <script src="https://unpkg.com/jquery@3.4.1/dist/jquery.min.js"></script>
+  <script src="https://www.layuicdn.com/layer-v3.1.1/layer.js"></script>
+  <script src="../static/sa.js"></script>
+  <script>
+    var home = new Vue({
+      el: '#home',
+      data() {
+      	return {
+      	  base_url: sa.cfg.api_url,
+		  frame: window.parent.app.frame,
+      	  fit: "contain",
+      	  p:{
+      		current: 1,
+      		size: 15,
+      		count: 0,
+      		tagIds:[],
+      		userIds:[]
+      	  },
+      	  tagList: [],
+      	  teacherList: [],
+      	  topicList:[]
+      	};
+      },
+      methods: {
+      	
+      	onChange:function(type, i){
+      		let tag;
+      		if(type == 1){
+      			tag = this.tagList[i];
+      		}else{
+      			tag = this.teacherList[i];
+      		}
+      		if(tag.effect == 'plain'){
+      			tag.effect = 'dark'
+      		}else{
+      			tag.effect = 'plain'
+      		}
+      		let teacherIds = [], tagIds = []
+      		this.teacherList.forEach(function (e) {
+      		   if(e.effect == 'dark'){
+      			   teacherIds.push(e.userId)
+      		   }
+      		})
+      		this.tagList.forEach(function (e) {
+      		   if(e.effect == 'dark'){
+      			   tagIds.push(e.typeId)
+      		   }
+      		})
+      		
+      		this.p.tagIds = tagIds;
+      		this.p.userIds = teacherIds;
+			this.p.current = 1
+      		console.log(this.p.tagIds)
+      		console.log(this.p.userIds)
+      		this.getTopicList();
+      	},
+      	getTagList: function(){
+      		let cfg = {
+      			type: 'get'
+      		}
+      		sa.ajax("/topic/tag/all", function(res){
+      			if(res.code == 200){
+      				this.tagList = []
+      				let tagList = this.tagList;
+      				res.data.forEach(function(e) {
+      				  let tag = {typeId: e.typeId, typeName: e.typeName, effect:'plain'}
+      				  tagList.push(tag);
+      				});
+      			}else{
+      				sa.error(res.msg)
+      			}
+      		}.bind(this), cfg)
+      	},
+      	getTeacherList: function(){
+      		let cfg = {
+      			type: 'get'
+      		}
+      		sa.ajax("/admin/teacher/all", function(res){
+      			if(res.code == 200){
+      				this.teacherList = [];
+      				let teacherList = this.teacherList
+      				res.data.forEach(function(e) {
+      				  let teacher = {userId: e.userId, username: e.username, effect:'plain'}
+      				  teacherList.push(teacher);
+      				});
+      			}else{
+      				sa.error(res.msg)
+      			}
+      		}.bind(this), cfg)
+      	},
+      	
+      	getTopicList: function(){
+      		sa.ajax('/student/topic/query', {
+      			current: this.p.current,
+      			size: this.p.size,
+      			tagString:JSON.stringify(this.p.tagIds),
+      			userString:JSON.stringify(this.p.userIds)
+      		}, function(res){
+      			if(res.code == 200){
+      				this.topicList = res.data.topicList;
+      				this.p.count = res.data.count
+      				console.log(res.data.count)
+      			}
+      		}.bind(this))
+      	},
+		getDetail:function(topicId){
+			this.frame.data = {
+				topicId: topicId
+			}
+			this.frame.frameUrl = './topic/topic-detail.html'
+		}
+      },
+      created: function(){
+      	this.getTagList();
+      	this.getTeacherList()
+      	this.getTopicList()
+      }
+    })
+  </script>
+</html>
+

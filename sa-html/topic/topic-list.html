@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	    <title>选题列表</title>
+	    <meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<!-- 所有的 css & js 资源 -->
+		<link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css">
+		<link rel="stylesheet" href="../../static/sa.css"> 
+		<script src="https://unpkg.com/vue@2.6.10/dist/vue.min.js"></script>
+		<script src="https://unpkg.com/element-ui@2.13.0/lib/index.js"></script>
+		<script src="https://unpkg.com/jquery@3.4.1/dist/jquery.min.js"></script>
+		<script src="https://www.layuicdn.com/layer-v3.1.1/layer.js"></script>
+		<script src="../../static/sa.js"></script>
+		<style type="text/css">
+			/* .data-table .el-table__body-wrapper{min-height: 0px; max-height: 0px;}
+			.data-table .el-table__body-wrapper{transition: all 0.3s;} */
+		</style>
+	</head>
+	<body>
+		<div class="vue-box" style="display: none;" :style="'display: block;'">
+			<div class="c-panel">
+				<div class="c-item">
+					<label class="c-label">标签：</label>
+					<el-select v-model="p.tagId" placeholder="请选择">
+						<el-option label="全部标签" value=""></el-option>
+					   <el-option
+					      v-for="tag in tags"
+					      :key="tag.typeId"
+					      :label="tag.typeName"
+					      :value="tag.typeId">{{tag.typeName}}
+					    </el-option>
+					</el-select>
+				</div>
+				
+				<div class="c-item">
+					<label class="c-label">教师：</label>
+					<el-select v-model="p.userId" placeholder="请选择">
+						<el-option label="全部" value=""></el-option>
+					    <el-option
+					       v-for="teacher in teachers"
+					       :key="teacher.userId"
+					       :label="teacher.username"
+					       :value="teacher.userId">{{teacher.username}}
+					     </el-option>
+					</el-select>
+				</div>
+				
+				
+				<div class="c-item">
+					<label class="c-label">状态：</label>
+					<el-select v-model="p.status" placeholder="请选择">
+						<el-option label="全部" value=""></el-option>	
+						<el-option label="未审核" value=1></el-option>
+						<el-option label="已通过" value=2></el-option>
+						<el-option label="已驳回" value=3></el-option>
+						<el-option label="进行中" value=4></el-option>
+						<el-option label="已结束" value=5></el-option>
+						<el-option label="已禁用" value=0></el-option>
+					</el-select>
+				</div>
+				
+				<div class="c-item" style="min-width: 10px;">
+					<el-button size="mini" type="primary" icon="el-icon-search" @click="seach">查询</el-button>
+				</div>
+				<!-- ------------- 快捷按钮 ------------- -->
+				<div class="fast-btn">
+					<el-button size="mini" type="primary" icon="el-icon-plus" @click="add()">新增</el-button>
+					<!-- <el-button size="mini" type="success" icon="el-icon-view" @click="getBySelect()">查看</el-button> -->
+					<el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteByIds()">删除</el-button>
+					<el-button size="mini" type="warning" icon="el-icon-download" @click="exportExcel()">导出</el-button>
+					<el-button size="mini" type="success" icon="el-icon-upload2" @click="importTopic()">导入</el-button>
+					<el-button size="mini" type="info"  icon="el-icon-refresh"  @click="sa.f5()">刷新</el-button>
+				</div>
+				<!-- ------------- 数据列表 ------------- -->
+				<el-table class="data-table" ref="data-table" :data="dataList" size="small">
+					<el-table-column type="selection" width="45px" fixed="left"></el-table-column>
+					<el-table-column prop="address" label="序号" width="50px">
+						<template slot-scope="s">
+							<span>{{s.$index + 1}}</span>
+						</template>
+					</el-table-column>
+					<el-table-column sortable label="编号" prop="topicId" width="70px"> </el-table-column>
+					<el-table-column label="标题" prop="topicName"></el-table-column>
+					<el-table-column label="选题标签" width="200px">
+						<template slot-scope="s">
+							<el-tag v-for="tag in s.row.tagList" style="margin-top: 5px; margin-left: 5px;">{{tag.typeName}}</el-tag>
+						</template>
+					</el-table-column>
+					
+					<el-table-column sortable label="选题人数" prop="count"></el-table-column>
+					<el-table-column label="发布人" prop="user.username"></el-table-column>
+					<el-table-column label="发布于" prop="gmtCreate"></el-table-column>
+					<el-table-column label="审核时间" prop="gmtModified"></el-table-column>
+					<el-table-column prop="address" label="状态" width="180px">
+						<template slot-scope="s">
+							<el-tag v-if="s.row.status == 0" type="info">已删除</el-tag>
+							<el-tag v-if="s.row.status == 1" >待审批</el-tag>
+							<el-tag v-if="s.row.status == 2" type="success">已通过</el-tag>
+							<el-tag v-if="s.row.status == 3" type="danger">已驳回</el-tag>
+							<el-tag v-if="s.row.status == 4" type="warning">进行中</el-tag>
+							<el-tag v-if="s.row.status == 5" type="danger">已结束</el-tag>
+						</template>
+					</el-table-column>
+					<el-table-column prop="address" label="操作" width="180px" fixed="right">
+						<template slot-scope="s">
+							<el-button class="c-btn" type="primary" icon="el-icon-edit" @click="update(s.row)">修改</el-button>
+							<el-button  v-if="s.row.status != 0" class="c-btn" type="danger" icon="el-icon-delete" @click="del(s.row)">移除</el-button>
+							<el-button  v-else class="c-btn" type="success" icon="el-icon-circle-check" @click="del(s.row)">恢复</el-button>
+						</template>
+
+					</el-table-column>
+				</el-table>
+				<!-- ------------- 分页 ------------- -->
+				<div class="page-box">
+					<el-pagination background
+						layout="total, prev, pager, next, sizes, jumper" 
+						:current-page.sync="p.current" 
+						:page-size.sync="p.size" 
+						:total="dataCount" 
+						:page-sizes="[5, 10, 20, 30, 40, 50, 100]" 
+						@current-change="f5(true)" 
+						@size-change="f5(true)">
+					</el-pagination>
+				</div>
+			</div>
+		</div>
+		<script src="data-list.js"></script>
+		<script>
+			var app = new Vue({
+				el: '.vue-box',
+				data: {
+					sa: sa,
+					p: { // 查询参数
+						current: 1,
+						size: 10,
+						tagId:'',
+						useId: '',
+						status: ''
+					},
+					dataCount: 0,	// 数据总数 
+					dataList: [] ,// 数据集合
+					teachers: [{
+					  userId: 0,
+					  loginname: '',
+					  email: '',
+					  username: '',
+					  originClass: '',
+					  headerImage: '',
+					  status: 0,
+					  roleId: 0
+					}],
+					tagList: [],
+					tags: [{
+					  typeId: '',
+					  typeName: "",
+					  gmtModified: "",
+					  gmtCreate: "",
+					  status: ''
+					}]
+				},
+				methods: {
+					// 数据刷新
+					getTags: function(){
+						let cfg = {
+							type: 'get'
+						}
+						sa.ajax('/topic/tag/all', function(res){
+							this.tags = res.data
+						}.bind(this), cfg)
+					},
+					
+					getTeachers: function(){
+						let cfg = {
+							type: 'get'
+						}
+						sa.ajax('/admin/teacher/all', function(res){
+							this.teachers = res.data
+						}.bind(this), cfg)
+					},
+					
+					f5: function() {
+						let cfg = {
+							type: 'get'
+						}
+						console.log(this.teachers)
+						sa.ajax('/topic/query', this.p, function(res){
+							this.dataList = res.data.topicList;	// 数据
+							this.dataCount = res.data.count;		// 分页 
+							sa.f5TableHeight();		// 刷新表格高度 
+						}.bind(this), cfg);
+					},
+					
+					seach: function(){
+						this.p.current = 1;
+						this.f5()
+						
+					},
+					// 修改
+					update: function(data) {
+						sa.showIframe('选题编辑', 'topic-add.html?id=' + data.id, '870px', '600px');
+					},
+					// 新增
+					add: function(data) {
+						sa.showIframe('新增选题', 'topic-add.html?id=-1', '870px', '600px');
+					},
+					importTopic: function(){
+						sa.showIframe('选题导入', 'topic-import.html', '870px', '600px');
+					},
+					// 删除
+					del: function(data) {
+						sa.confirm('是否删除，此操作不可撤销', function() {
+							sa.ajax('/topic/delete/' + data.topicId, function(res) {
+								sa.arrayDelete(app.dataList, data);
+								sa.ok('删除成功');
+								sa.f5TableHeight();		// 刷新表格高度 
+							})
+						});
+					},
+					// 批量删除
+					deleteByIds: function() {
+						// 获取选中元素的id列表
+						let selection = this.$refs['data-table'].selection;
+						let ids = sa.getArrayField(selection, 'topicId');
+						if(selection.length == 0) {
+							return sa.msg('请至少选择一条数据')
+						}
+						// 提交删除 
+						sa.confirm('是否批量删除选中数据？此操作不可撤销', function() {
+							sa.ajax('/topic/delete', {ids: JSON.stringify(ids)}, function(res) {
+								sa.ok(res.msg);
+								sa.f5TableHeight();		// 刷新表格高度 
+							}.bind(this))
+						}.bind(this));
+					},
+					exportExcel: function(){
+						let tagId = this.p.tagId ? this.p.tagId : '';
+						let userId = this.p.userId ? this.p.userId : '';
+						let status = this.p.status ? this.p.status : '';
+						sa.open(sa.cfg.api_url + '/topic/export?tagId=' + tagId + '&userId='+ userId + '&status=' + status)
+						// location.href = sa.cfg.api_url + '/topic/export'
+					}
+				},
+				created: function() {	
+					this.getTags();
+					this.getTeachers()
+					this.f5();
+					sa.onInputEnter();		// 监听输入框的回车事件，执行查询  
+				}
+			})
+		</script>
+
+	</body>
+</html>

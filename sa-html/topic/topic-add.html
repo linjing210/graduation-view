@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>标签-添加/修改</title>
+		<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<!-- 所有的 css js 资源 -->
+		<link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css">
+		<link rel="stylesheet" href="../../static/sa.css"> 
+		<script src="https://unpkg.com/vue/dist/vue.js"></script>
+		<script src="https://unpkg.com/element-ui@2.13.0/lib/index.js"></script>
+		<script src="https://unpkg.com/jquery@3.4.1/dist/jquery.js"></script>
+		<script src="https://www.layuicdn.com/layer-v3.1.1/layer.js"></script>
+		<script src="../../static/sa.js"></script>
+		<style type="text/css">
+			.c-panel .el-form .c-label{width: 6em !important;}
+			.c-panel .el-form .el-input{width: 250px;}
+			.search-tag{
+				margin: 0.625rem 0.3125rem;
+				cursor: pointer;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="vue-box"  style="display: none;" :style="'display: block;'">
+			<el-form :model="topic" :rules="rules" ref="topic" label-width="100px" class="demo-ruleForm">
+			  <el-form-item label="选题标题" prop="name">
+				  <el-col span=11><el-input v-model="topic.name"></el-input></el-col>
+			  </el-form-item>
+			  <el-form-item label="相关标签" prop="">
+			    <div class="tag-group">
+			      <el-tag
+			    	class="search-tag"
+			        v-for="(tag, index) in tagList"
+			        :key="tag.typeId"
+			        :effect="tag.effect" 
+			    				 @click='onChange(index)'>
+			        {{ tag.typeName }}
+			      </el-tag>
+			    </div>
+			  </el-form-item>
+
+			  <el-form-item label="开始时间" required>
+			    <el-col :span="11">
+			        <template>
+			           <div class="block">
+			               <el-date-picker
+			                 v-model="value1"
+			                 type="datetimerange"
+			                 range-separator="至"
+			                 start-placeholder="开始日期"
+			                 end-placeholder="结束日期">
+			               </el-date-picker>
+			             </div>
+			        </template>
+			    </el-col>
+				
+			  </el-form-item>
+			  <el-form-item label="即时配送" prop="delivery">
+			    <el-switch v-model="topic.delivery"></el-switch>
+			  </el-form-item>
+			  <el-form-item label="活动性质" prop="type">
+			    <el-checkbox-group v-model="topic.type">
+			      <el-checkbox label="美食/餐厅线上活动" name="type"></el-checkbox>
+			      <el-checkbox label="地推活动" name="type"></el-checkbox>
+			      <el-checkbox label="线下主题活动" name="type"></el-checkbox>
+			      <el-checkbox label="单纯品牌曝光" name="type"></el-checkbox>
+			    </el-checkbox-group>
+			  </el-form-item>
+			  <el-form-item label="特殊资源" prop="resource">
+			    <el-radio-group v-model="topic.resource">
+			      <el-radio label="线上品牌商赞助"></el-radio>
+			      <el-radio label="线下场地免费"></el-radio>
+			    </el-radio-group>
+			  </el-form-item>
+			  <el-form-item label="活动形式" prop="desc">
+			    <el-input type="textarea" v-model="topic.desc"></el-input>
+			  </el-form-item>
+			  <el-form-item>
+			    <el-button type="primary" @click="submitForm('topic')">立即创建</el-button>
+			    <el-button @click="resetForm('topic')">重置</el-button>
+			  </el-form-item>
+			</el-form>
+		</div>
+		<script src="./moke-data.js"></script>
+		<script>
+			var app = new Vue({
+				el: '.vue-box',
+				data() {
+				      return {
+						value1: '',
+						tagList: [],
+						tagIds: [],
+						fileIds: [],
+				        topic: {
+				          name: '',
+				          region: '',
+				          date1: '',
+				          date2: '',
+				          delivery: false,
+				          type: [],
+				          resource: '',
+				          desc: '',
+						  
+				        },
+				        rules: {
+				          name: [
+				            { required: true, message: '请输入活动名称', trigger: 'blur' },
+				            { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+				          ],
+				          region: [
+				            { required: true, message: '请选择活动区域', trigger: 'change' }
+				          ],
+				          date1: [
+				            { type: 'date', required: true, message: '请选择日期', trigger: 'change' }
+				          ],
+				          date2: [
+				            { type: 'date', required: true, message: '请选择时间', trigger: 'change' }
+				          ],
+				          type: [
+				            { type: 'array', required: true, message: '请至少选择一个活动性质', trigger: 'change' }
+				          ],
+				          resource: [
+				            { required: true, message: '请选择活动资源', trigger: 'change' }
+				          ],
+				          desc: [
+				            { required: true, message: '请填写活动形式', trigger: 'blur' }
+				          ]
+				        }
+				      };
+				    },
+				    methods: {
+				      submitForm(formName) {
+				        this.$refs[formName].validate((valid) => {
+				          if (valid) {
+				            alert('submit!');
+				          } else {
+				            console.log('error submit!!');
+				            return false;
+				          }
+				        });
+				      },
+				      resetForm(formName) {
+				        this.$refs[formName].resetFields();
+				      },
+					  getTagList: function(){
+					  	let cfg = {
+					  		type: 'get'
+					  	}
+					  	sa.ajax("/topic/tag/all", function(res){
+					  		if(res.code == 200){
+					  			this.tagList = []
+					  			let tagList = this.tagList;
+					  			res.data.forEach(function(e) {
+					  			  let tag = {typeId: e.typeId, typeName: e.typeName, effect:'plain'}
+					  			  tagList.push(tag);
+					  			});
+					  		}else{
+					  			sa.error(res.msg)
+					  		}
+					  	}.bind(this), cfg)
+					  },
+					  onChange:function(i){
+					  	let tag = this.tagList[i];
+					  	if(tag.effect == 'plain'){
+					  		tag.effect = 'dark'
+					  	}else{
+					  		tag.effect = 'plain'
+					  	}
+						// this.tagList.forEach(function (e) {
+						//    if(e.effect == 'dark'){
+						// 	   tagIds.push(e.typeId)
+						//    }
+						// })
+					  }
+				    },
+				mounted: function(){
+					this.getTagList()
+					this.m = this.createModel();
+				}
+			})
+		</script>
+	</body>
+</html>

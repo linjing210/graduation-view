@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>用户列表</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+		<!-- 所有的 css & js 资源 -->
+		<link rel="stylesheet" href="https://unpkg.com/element-ui@2.13.0/lib/theme-chalk/index.css">
+		<link rel="stylesheet" href="../../static/sa.css"> 
+		<script src="https://unpkg.com/vue@2.6.10/dist/vue.min.js"></script>
+		<script src="https://unpkg.com/element-ui@2.13.0/lib/index.js"></script>
+		<script src="https://unpkg.com/jquery@3.4.1/dist/jquery.min.js"></script>
+		<script src="https://www.layuicdn.com/layer-v3.1.1/layer.js"></script>
+		<script src="../../static/sa.js"></script>
+	</head>
+	<body>
+		<div class="vue-box" style="display: none;" :style="'display: block;'">
+			<div class="c-panel">
+				<!-- ------------- 检索参数 ------------- -->
+				<div class="c-title">检索参数</div>
+				<el-form>
+					<div class="c-item">
+						<label class="c-label">学号/工号：</label>
+						<el-input v-model="p.loginname" placeholder="请输入内容"></el-input>
+					</div>
+					
+					<div class="c-item">
+						<label class="c-label">用户名：</label>
+						<el-input v-model="p.username" placeholder="请输入内容"></el-input>
+					</div>
+					<div class="c-item">
+						<label class="c-label">状态：</label>
+						<el-select v-model="p.status" placeholder="请选择">
+							<el-option label="全部" value="-1"></el-option>
+						    <el-option
+						      v-for="status in statusList"
+						      :key="status.value"
+						      :label="status.label"
+						      :value="status.value">
+						    </el-option>
+						  </el-select>
+					</div>
+					
+					<div class="c-item">
+						<label class="c-label">类别：</label>
+						<el-select v-model="p.roleId" placeholder="请选择">
+							<el-option label="全部" value="0"></el-option>
+						    <el-option
+						      v-for="role in roleList"
+						      :key="role.value"
+						      :label="role.label"
+						      :value="role.value">
+						    </el-option>
+						  </el-select>
+					</div>
+					<div class="c-item" style="min-width: 10px;">
+						<el-button size="mini" type="primary" icon="el-icon-search" @click="f5">查询</el-button>
+					</div>
+				</el-form>
+				<!-- <div class="c-title">数据列表</div> -->
+				<!-- ------------- 快捷按钮 ------------- -->
+				<div class="fast-btn">
+					<el-button size="mini" type="primary" icon="el-icon-plus" @click="add()">新增</el-button>
+					<el-button size="mini" type="danger" icon="el-icon-delete" @click="deleteByIds()">删除</el-button>
+					<el-button size="mini" type="warning" icon="el-icon-download" @click="exportUser()">导出</el-button>
+					<el-button size="mini" type="success" icon="el-icon-upload2" @click="importUser()">导入</el-button>
+					<el-button size="mini" type="info"  icon="el-icon-refresh"  @click="sa.f5()">刷新</el-button>
+				</div>
+				<!-- ------------- 数据列表 ------------- -->
+				<el-table class="data-table" ref="data-table" :data="dataList" size="small">
+					<el-table-column type="selection" width="45px"></el-table-column>
+					<el-table-column label="序号" width="50px">
+						<template slot-scope="s">
+							<span>{{s.$index + 1}}</span>
+						</template>
+					</el-table-column>
+					<el-table-column label="学号/工号" prop="loginname" hidden width="150px" > 
+						
+					</el-table-column>
+					<el-table-column label="昵称" prop="username" width="180px">
+						<template slot-scope="s">
+							<img :src="sa.cfg.api_url + s.row.headerImage" @click="sa.showImage(sa.cfg.api_url + s.row.headerImage, '400px', '400px')"
+								style="width: 3em; height: 3em; float: left; margin-right: 1em; border-radius: 50%; cursor: pointer;"
+								 alt="点击查看大图">
+							<div style="float: left; width: 80px; line-height: 20px;">
+								<b>{{s.row.username}}</b>
+							</div>
+						</template>
+					</el-table-column>
+					<el-table-column label="邮箱" prop="email"> </el-table-column>
+					
+					<el-table-column label="用户类别">
+						<template slot-scope="s">
+							<el-tag v-if="s.row.roleId == 1">超级管理员</el-tag>
+							<el-tag v-if="s.row.roleId == 2">管理员</el-tag>
+							<el-tag v-if="s.row.roleId == 3">教师</el-tag>
+							<el-tag v-if="s.row.roleId == 4">学生</el-tag>
+						</template>
+					</el-table-column>
+					<el-table-column label="所在院系/班级" prop="originalClass"> </el-table-column>
+					<el-table-column label="状态">
+						<template slot-scope="s">
+							<el-switch v-model="s.row.status" :active-value="1" :inactive-value="0" inactive-color="#606266"></el-switch>
+							<b style="color: #409EFF;" v-if="s.row.status == 1">正常</b>
+							<b style="color: #606266;" v-if="s.row.status == 0">禁用</b>
+						</template>
+					</el-table-column>
+					
+					<el-table-column prop="address" label="操作">
+						<template slot-scope="s">
+							<el-button class="c-btn" type="primary"  icon="el-icon-edit" @click="get(s.row)">编辑</el-button>
+							<el-button class="c-btn" type="danger" icon="el-icon-delete" @click="del(s.row)">删除</el-button>
+						</template>
+					</el-table-column>
+				</el-table>
+				<!-- ------------- 分页 ------------- -->
+				<div class="page-box">
+					<el-pagination background
+						layout="total, prev, pager, next, sizes, jumper" 
+						:current-page.sync="p.pageNo" 
+						:page-size.sync="p.pageSize" 
+						:total="dataCount" 
+						:page-sizes="[1, 10, 20, 30, 40, 50, 100]" 
+						@current-change="f5(true)" 
+						@size-change="f5(true)">
+					</el-pagination>
+				</div>
+			</div>
+		
+		</div>
+		<script type="text/javascript">
+			var app = new Vue({
+				el: '.vue-box',
+				data: {
+					p: {	// 查询参数 
+						username: '',
+						loginname: '',
+						status: '',
+						roleId: '',
+						current: 1,
+						size: 10,
+					},
+					dataCount: 1422,
+					dataList: [],
+					statusList:[{
+						label: '正常',
+						value: 1
+					},{
+						label: '禁用',
+						value: 0
+					}],
+					roleList:[{
+						label: '管理员',
+						value: 2
+					},{
+						label: '教师',
+						value: 3
+					},{
+						label: '学生',
+						value: 4
+					}],
+				},
+				methods: {
+					// 数据刷新
+					f5: function() {
+						let cfg = {
+							type: 'get'
+						}
+						sa.ajax('/user/query', this.p, function(res){
+							this.dataList = res.data.userList;	// 数据  
+							this.dataCount = res.data.count;		// 分页  
+							sa.f5TableHeight();		// 刷新表格高度 
+						}.bind(this), cfg);
+					},
+					// 查看
+					get: function(data) {
+						var str = '<div>';
+						str += '<p>编号：' + data.id + '</p>';
+						str += '<p>昵称：' + data.username + '</p>';
+						str += '<p>性别：' + data.sex + '</p>';
+						str += '<p>当前状态：<b>' + (data.status == 1 ? '正常' : '禁用') + '</b></p>';
+						str += '<p>注册方式：' + data.create_type + '</p>';
+						str += '<p>注册时间：' + data.create_time + '</p>';
+						str += '</div>';
+						sa.alert(str);
+					},
+					// 新增
+					add: function(data) {
+						// sa.showIframe('新增数据', 'user-add.html?id=-1', '420px', '280px');
+						this.sa_admin.showMenuById('5-2');
+					},
+					// 删除
+					del: function(data) {
+						sa.confirm('是否删除，此操作不可撤销', function() {
+							sa.ajax2('/user/delete?id=' + data.id, function(res) {
+								sa.arrayDelete(this.dataList, data);
+								sa.ok('删除成功');
+								sa.f5TableHeight();		// 刷新表格高度 
+							}.bind(this))
+						}.bind(this));
+					},
+					// 批量删除
+					deleteByIds: function() {
+						// 获取选中元素的id列表
+						let selection = this.$refs['data-table'].selection;
+						let ids = sa.getArrayField(selection, 'id');
+						if(selection.length == 0) {
+							return sa.msg('请至少选择一条数据')
+						}
+						// 提交删除 
+						sa.confirm('是否批量删除选中数据？此操作不可撤销', function() {
+							sa.ajax2('/SysType/deleteByIds', {ids: ids.join(',')}, function(res) {
+								sa.arrayDelete(this.dataList, selection);
+								sa.ok('删除成功');
+								sa.f5TableHeight();		// 刷新表格高度 
+							}.bind(this))
+						}.bind(this));
+					},
+					exportUser: function(){
+						let loginname = this.p.loginname ? this.p.loginname : '';
+						let username = this.p.username ? this.p.username : '';
+						let status = this.p.status ? this.p.status : '';
+						let roleId = this.p.roleId ? this.p.roleId : '';
+						sa.open(sa.cfg.api_url + '/admin/user/info/export?loginname=' + loginname + '&username='+ username + '&status=' + status + '&roleId='+ roleId)
+						// location.href = sa.cfg.api_url + '/topic/export'
+					},
+					importUser: function(){
+						sa.showIframe('用户导入', 'user-import.html', '870px', '600px');
+					}
+				},
+				created: function(){
+					this.f5()
+					sa.onInputEnter();		// 监听输入框的回车事件，执行查询  
+				}
+			})
+			
+		</script>
+		
+		
+		
+		
+		
+		
+	</body>
+</html>

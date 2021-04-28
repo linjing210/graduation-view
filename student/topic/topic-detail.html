@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link rel="stylesheet"  href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+		<!-- import Vue before Element -->
+		<script src="https://unpkg.com/vue/dist/vue.js"></script>
+		<style>
+			html, body{
+				margin: 0;
+				padding: 0;
+				background-color: #f6f8fa;
+			}
+			#topic-detail{
+				width: 80%;
+				margin: 30px auto;
+				background-color: #f6f8fa;
+			}
+			.topic-image-box{
+				margin: 20px;
+				width: 400px;
+				height: 260px;
+			}
+			.topic-detail-box{
+				margin: 50px 50px;
+				background-color: #ffffff;
+			}
+
+			.topic-title{
+				top: 6px;
+				color: #2b2b2b;
+				font-size: 20px;
+				line-height: 34px;
+				font-weight: bold;
+			}
+
+			.topic-info-box{
+				margin: 20px 50px;
+			}
+
+			.margin-nonmal{
+				margin-left: 5px;
+				margin-top: 15px;
+			}
+			.box-shadow{
+				box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.1)
+			}
+
+			.topic-context-box{
+				margin: 20px 50px;
+			}
+		</style>
+	</head>
+	<body>
+		<div id="topic-detail">
+			<template>
+			<el-row >
+				<el-col>
+					<el-breadcrumb separator-class="el-icon-arrow-right">
+						<el-breadcrumb-item><el-link @click="backHome()">默认链接</el-link></el-breadcrumb-item>
+					  <el-breadcrumb-item>选题详情</el-breadcrumb-item>
+					</el-breadcrumb>
+				</el-col>
+			</el-row>
+			<el-row class="topic-detail-box box-shadow">
+				<el-col :span=9>
+					<div class="topic-image-box"><img :src="base_url + topic.cover" width="380px"/></div>
+				</el-col>
+				<el-col :span=10>
+					<div class="topic-info-box">
+						<span class="topic-title">{{topic.topicName}}</span>
+						<div>
+							<i class="el-icon-collection-tag margin-nonmal"></i>
+							<el-tag
+							  class="margin-nonmal"
+							  v-for="tag in topic.tagList"
+							  :key="tag.typeId"
+							  >
+							  {{tag.typeName}}
+							</el-tag>
+						</div>
+						<div class="margin-nonmal" v-if="topic.status == 4"><span>当前状态：</span><el-tag effect="plain">进行中</el-tag></div>
+						<div class="margin-nonmal" v-else-if="topic.status == 5"><span>当前状态：</span><el-tag type="info" effect="plain">已结束</el-tag></div>
+						<div class="margin-nonmal" v-else-if="topic.status == 2"><span>开始时间：{{topic.startTime}}</span> - <span>截止时间：{{topic.endTime}}</span></div>
+						<div class="margin-nonmal"><span>发布人：{{topic.user.username}}</span></div>
+						<div class="margin-nonmal"><span>选题人数：{{topic.count}}</span></div>
+						<div class="margin-nonmal" v-if="topic.status != 2" ><span><el-button type="info" disabled plain>立即申请</el-button></span></div>
+						<div class="margin-nonmal" v-else><span><el-button type="primary" plain>立即申请</el-button></span></div>
+					</div>
+				</el-col>
+			</el-row>
+
+			<el-row class="topic-detail-box box-shadow">
+				<el-col>
+					<div class="topic-context-box">
+						<el-tabs v-model="tab.activeName" @tab-click="handleClick">
+						    <el-tab-pane label="选题描述" name="context">{{topic.context}}</el-tab-pane>
+						    <el-tab-pane label="参考资料" name="file">
+								<el-table
+								      :data="fileList"
+								      style="width: 100%">
+								      <el-table-column
+								        prop="fileName"
+								        label="文件名"
+								        width="400px">
+								      </el-table-column>
+									  <el-table-column
+									    prop="uploadTime"
+									    label="上传时间">
+									  </el-table-column>
+									  <el-table-column
+									    prop="downloadNum"
+									    label="下载量"
+									  	>
+									  </el-table-column>
+								      <el-table-column
+								            fixed="right"
+								            label="操作">
+								            <template slot-scope="scope">
+								              <el-button @click="download(scope.row)" type="primary">点击下载</el-button>
+								            </template>
+								          </el-table-column>
+								    </el-table>
+							</el-tab-pane>
+						</el-tabs>
+					</div>
+				</el-col>
+			</el-row>
+			</template>
+		</div>
+
+	</body>
+
+	<!-- import JavaScript -->
+	<script src="https://unpkg.com/element-ui/lib/index.js"></script>
+	<script src="https://unpkg.com/jquery@3.4.1/dist/jquery.min.js"></script>
+	<script src="https://www.layuicdn.com/layer-v3.1.1/layer.js"></script>
+	<script type="text/javascript" src="../../static/sa.js"></script>
+
+	<script>
+		new Vue({
+			el: '#topic-detail',
+			data(){
+				return {
+					base_url: sa.cfg.api_url,
+					frame: window.parent.app.frame,
+					tab:{
+						activeName: 'context'
+					},
+					topic:{
+						topicId:'',
+						topicName:'超市管理系统',
+						context:'超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统'+
+						'超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统' +
+						'超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统超市管理系统',
+						startTime:'2020-12-23',
+						endTime:'2020-12-24',
+						tagList:[{typeId:1, typeName: 'c++'}, {typeId:2, typeName: 'Java'}],
+						cover:'../../assets/20180730110747.png',
+						status:2,
+						count:100,
+						user:{username:'lin'},
+					},
+					fileList:[]
+				}
+			},
+			methods:{
+				handleClick: function(tab, event) {
+
+				},
+				download: function(row){
+					console.log()
+					sa.ajax('/file/update/download/' + row.fileId, function(res){
+						if(res.code != 200){
+							sa.error(res.msg)
+						}else{
+							sa.showIframe('', this.base_url + row.fileUrl)
+						}
+					})
+				},
+				getTopic: function(){
+
+					let cfg = {
+						type: 'get'
+					}
+					sa.ajax('/topic/file/info/' + this.frame.data.topicId, function(res){
+						if(res.code == 200){
+							this.fileList = res.data;
+						}else{
+							sa.error(res.msg)
+						}
+					}.bind(this), cfg);
+
+
+				},
+				getFileList:function(){
+					let cfg = {
+						type: 'get'
+					}
+					sa.ajax('/topic/info/' + this.frame.data.topicId, function(res){
+						if(res.code == 200){
+							this.topic = res.data;
+						}else{
+							sa.error(res.msg)
+						}
+					}.bind(this), cfg);
+				},
+				backHome:function(){
+					this.frame.frameUrl = './home.html'
+				}
+			},
+			created:function(){
+				this.getTopic();
+				this.getFileList();
+			}
+
+		})
+	</script>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+		<link href="https://www.layuicdn.com/layui-v2.6.4/css/layui.css" rel="stylesheet"/>
+	</head>
+	<body>
+		<div style="margin: 20px auto; width: 500px;">
+			<div class="layui-upload-drag" id="topic">
+			  <i class="layui-icon" style="color: #066CF3;"></i>
+			  <p>点击上传，或将文件拖拽到此处</p>
+			  <p>注：附件只支持xls、xlsx格式（大小不能超过100M，建议在10M以内）</p>
+			  <div class="layui-hide" id="uploadDemoView">
+				<hr>
+			  </div>
+			</div>
+		<div style="margin-top: 3.125rem; margin-left: 6.5rem;">
+			<button onclick="importUser(4)" type="button" disabled class="layui-btn layui-btn-radius layui-btn-normal layui-btn-disabled">导入为学生</button>
+			<button onclick="importUser(3)" type="button" disabled class="layui-btn layui-btn-radius layui-btn-normal layui-btn-disabled">导入为老师</button>
+		</div>
+			
+		</div>
+		
+		<script src="https://www.layuicdn.com/layui/layui.js"></script>
+		<script src="https://unpkg.com/jquery@3.4.1/dist/jquery.min.js"></script>
+		<script src="../../static/sa.js"></script>
+		<script>
+			let fileInfo = {
+				fileId : '',
+				fileUrl : '',
+				
+			}
+			function importUser(roleId){
+				sa.confirm("确定导入为" + (roleId == 3? '教师' : '学生') + '?,此操作不撤销!', function(){
+					sa.ajax('/admin/user/import', {
+						fileId: fileInfo.fileId,
+						roleId: roleId
+					}, function(res){
+						if(res.code == 200){
+							sa.ok(res.msg)
+							sa.closeCurrIframe();
+						}else{
+							sa.error(res.msg)
+						}
+					})
+				})				
+			}
+			layui.use(['upload'], function(){
+				
+				
+				upload = layui.upload;
+				
+				//拖拽上传
+				upload.render({
+					elem: '#topic'
+					,url: sa.cfg.api_url + '/file/uplaod' //改成您自己的上传接口
+					,size: 100 * 1024
+					,accept: 'file'
+					,exts: 'xls|xlsx'
+					,done: function(res){
+						if(res.code == 200){
+							fileInfo.fileId = res.data.fileId;
+							fileInfo.fileUrl = res.data.fileUrl;
+							layui.$('.layui-btn').removeClass('layui-btn-disabled')
+							layui.$('.layui-btn').attr('disabled', false)
+							sa.msg(res.msg)
+						}else{
+							sa.error(res.msg)
+						}
+					},before: function () {
+						this.data = {
+							token: '123'
+						}
+					},process: function(){
+						layer.loading()
+					}
+				});
+				
+					
+			})
+		</script>
+	</body>
+</html>

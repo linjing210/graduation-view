@@ -1,0 +1,19 @@
+{
+	"code": 200,
+	"msg": "ok",
+	"data": [{
+			"id": 12001,
+			"loginname": "318102010632",
+			"username": "省长",
+			"headerImage": "https://color-test.oss-cn-qingdao.aliyuncs.com/dyc/img/default_head/2.png?x-oss-process=style/yasuo",
+			"email": "这人懒，啥也没有留下",
+			"originalClass": "123456",
+			"sex": "男",
+			"gmtModified": "2019-02-09 20:22:00",
+			"gmtCreate": "2019-02-09 20:22:00",
+			"roleId": 3,
+			"status": 1
+		}
+	],
+	"dataCount": 3306
+}
